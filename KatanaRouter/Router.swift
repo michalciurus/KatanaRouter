@@ -14,13 +14,19 @@ open class Router<State: RoutableState> {
     var lastNavigationStateCopy: NavigationTreeNode?
     let routingQueue: DispatchQueue
     
-    public init(store: Store<State>) {
+    public init(store: Store<State>, rootRoutable: Routable?) {
         self.store = store
         routingQueue = DispatchQueue(label: "RoutingQueue", attributes: [])
         _ =  store.addListener { [weak self] in
             self?.stateChanged()
         }
-        stateChanged()
+        
+        if let rootRoutable = rootRoutable {
+            let setRootAction = SetRootRoutable(routable: rootRoutable)
+            store.dispatch(setRootAction)
+        } else {
+            stateChanged()
+        }
     }
     
     private func stateChanged() {

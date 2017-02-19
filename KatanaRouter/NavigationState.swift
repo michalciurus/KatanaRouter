@@ -22,6 +22,7 @@ public struct Destination: Equatable, Hashable {
 }
 
 public struct NavigationState {
+    public init() {}
     public var navigationTreeRootNode: NavigationTreeNode?
 }
 

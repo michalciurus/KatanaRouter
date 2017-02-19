@@ -17,3 +17,19 @@ public protocol Routable {
                 destinationsToPush: [Destination],
                 completionHandler: @escaping RoutableCompletion) -> [Destination : Routable]
 }
+
+public extension Routable {
+    func push(destination: Destination, completionHandler: @escaping RoutableCompletion) -> Routable {
+        fatalError()
+    }
+    func pop(destination: Destination, completionHandler: @escaping RoutableCompletion) {
+        fatalError()
+
+    }
+    func change(destinationsToPop: [Destination],
+                destinationsToPush: [Destination],
+                completionHandler: @escaping RoutableCompletion) -> [Destination : Routable] {
+        fatalError()
+    }
+}
+
