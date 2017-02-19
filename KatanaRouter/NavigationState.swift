@@ -21,14 +21,19 @@ public struct Destination: Equatable, Hashable {
     }
 }
 
-public struct NavigationState {
-    public init() {}
-    public var navigationTreeRootNode: NavigationTreeNode?
-}
-
 public protocol RoutableState: State {
     var navigationState: NavigationState { get set }
 }
+
+public struct NavigationState {
+    public var navigationTreeRootNode: NavigationTreeNode?
+
+    public init(navigationRootNode: NavigationTreeNode? = nil) {
+        self.navigationTreeRootNode = navigationRootNode
+    }
+}
+
+//MARK: NavigationState Mutation Helper Functions
 
 public extension NavigationState {
     public mutating func addNewDestinationToActiveRoute(_ destination: Routable.Type, contextData: Any?) {

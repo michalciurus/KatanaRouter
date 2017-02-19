@@ -8,7 +8,7 @@
 
 import Katana
 
-
+/// Add a new destination on top of the current route
 public struct AddNavigationDestination: Action {
     
     private let routableType: Routable.Type
@@ -26,6 +26,9 @@ public struct AddNavigationDestination: Action {
     }
 }
 
+
+/// Set the current navigation root. 
+/// Discards all the current routes and replaces it with the root routable!
 public struct SetRootRoutable: Action {
     
     private let routable: Routable

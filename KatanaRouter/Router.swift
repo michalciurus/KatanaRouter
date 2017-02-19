@@ -8,11 +8,11 @@
 
 import Katana
 
-open class Router<State: RoutableState> {
+final class Router<State: RoutableState> {
     
-    let store: Store<State>
-    var lastNavigationStateCopy: NavigationTreeNode?
-    let routingQueue: DispatchQueue
+    fileprivate let store: Store<State>
+    fileprivate var lastNavigationStateCopy: NavigationTreeNode?
+    fileprivate let routingQueue: DispatchQueue
     
     public init(store: Store<State>, rootRoutable: Routable?) {
         self.store = store
@@ -21,6 +21,8 @@ open class Router<State: RoutableState> {
             self?.stateChanged()
         }
         
+        // User can conveniently set the root routable, without calling any actions
+        // Or he can pas `nil` and set the root node himself e.g. restored from a persistence store
         if let rootRoutable = rootRoutable {
             let setRootAction = SetRootRoutable(routable: rootRoutable)
             store.dispatch(setRootAction)
@@ -28,18 +30,24 @@ open class Router<State: RoutableState> {
             stateChanged()
         }
     }
+}
+
+private extension Router {
     
-    private func stateChanged() {
+    func stateChanged() {
         let currentState = store.state.navigationState.navigationTreeRootNode
         fireActionsForChanges(lastState: lastNavigationStateCopy, currentState: currentState)
         lastNavigationStateCopy = currentState?.deepCopy()
     }
     
-    private func fireActionsForChanges(lastState: NavigationTreeNode?, currentState: NavigationTreeNode?) {
+    func fireActionsForChanges(lastState: NavigationTreeNode?, currentState: NavigationTreeNode?) {
         let actions = NavigationTreeDiff.getNavigationDiffActions(lastState: lastState, currentState: currentState)
         
         for action in actions {
             
+            // Creating a semaphore to wait for the completion handlers.
+            // Users need call the handlers, because UI transitions take time/are asynchronous
+            // so we can't fire all the events synchronously
             let completionSemaphore = DispatchSemaphore(value: 0)
             
             routingQueue.async {
@@ -55,9 +63,9 @@ open class Router<State: RoutableState> {
                     DispatchQueue.main.async {
                         self.performPop(node: nodeToPop, completion: completion)
                     }
-                case .changed(let x, let y):
+                case .changed(let nodesToPop, let nodesToPush):
                     DispatchQueue.main.async {
-                        self.performChange(nodesToPop: x, nodesToPush: y, completion: completion)
+                        self.performChange(nodesToPop: nodesToPop, nodesToPush: nodesToPush, completion: completion)
                     }
                     
                     let timeToWait = DispatchTime.now() + .seconds(3)
@@ -71,20 +79,20 @@ open class Router<State: RoutableState> {
         }
     }
     
-    private func performPush(node: NavigationTreeNode, completion: @escaping RoutableCompletion) {
+    func performPush(node: NavigationTreeNode, completion: @escaping RoutableCompletion) {
         if let parentNode = node.parentNode {
             let routable = parentNode.currentRoutable!.push(destination: node.value, completionHandler: completion)
             node.currentRoutable = routable
         }
     }
     
-    private func performPop(node: NavigationTreeNode, completion: @escaping RoutableCompletion) {
+    func performPop(node: NavigationTreeNode, completion: @escaping RoutableCompletion) {
         if let parentNode = node.parentNode {
             parentNode.currentRoutable!.pop(destination: node.value, completionHandler: completion)
         }
     }
     
-    private func performChange(nodesToPop: [NavigationTreeNode], nodesToPush: [NavigationTreeNode], completion: @escaping RoutableCompletion) {
+    func performChange(nodesToPop: [NavigationTreeNode], nodesToPush: [NavigationTreeNode], completion: @escaping RoutableCompletion) {
         let node = nodesToPop.count > 0 ? nodesToPop[0] : nodesToPush[0]
         
         if let parentNode = node.parentNode {
@@ -92,6 +100,7 @@ open class Router<State: RoutableState> {
             let destinationsToPush = nodesToPush.map { $0.value }
             let routables = parentNode.currentRoutable!.change(destinationsToPop: destinationsToPop, destinationsToPush: destinationsToPush, completionHandler: completion)
             
+            // Need to make sure that the user returned all the needed pushed Routables
             for nodeToPush in nodesToPush {
                 let routable = routables[nodeToPush.value]
                 if let routable = routable {
@@ -100,8 +109,6 @@ open class Router<State: RoutableState> {
                     fatalError("Did not find a correct Routable for a pushed Destination. Please make sure you're returning a correct dictionary in change(destinationsToPop:destinationsToPush:completionHandler:)")
                 }
             }
-            
         }
     }
-    
 }

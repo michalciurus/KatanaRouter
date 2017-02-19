@@ -8,10 +8,13 @@
 
 import Foundation
 
+
+/// Navigation tree node, used to build a tree structure of the navigation state
 final public class NavigationTreeNode: Equatable {
     
     public let value: Destination
     public var children: [NavigationTreeNode]
+    /// Active route is the currently visible navigation path of nodes
     public var isActiveRoute: Bool
     public var parentNode: NavigationTreeNode?
     public var currentRoutable: Routable?
@@ -57,6 +60,12 @@ final public class NavigationTreeNode: Equatable {
         return nil
     }
     
+    
+    /// Traverses all the nodes in the tree
+    /// Inactive nodes have the priority: it's important that the active path is visited last
+    /// - Parameters:
+    ///   - postOrder: Traverses post order if true. Pre-order if false.
+    ///   - visitNode: visitNode is called when a node is visited
     public func traverse(postOrder: Bool, visitNode: (NavigationTreeNode) -> ()) {
         let activeChildrenLast = children.sorted { !($0.0.isActiveRoute) }
         
@@ -93,6 +102,10 @@ final public class NavigationTreeNode: Equatable {
         return find(value: value) != nil ? true : false
     }
     
+    
+    /// Creates a deep copy of the node and it's children
+    /// It does not create a copy of the parent! That's why it's best that this method is used on the root of the tree
+    /// - Returns: deep copy of the tree
     public func deepCopy() -> NavigationTreeNode {
         var childrenCopies: [NavigationTreeNode] = []
         
