@@ -8,13 +8,13 @@
 
 import Katana
 
-final class Router<State: RoutableState> {
+final public class Router<State: RoutableState> {
     
     fileprivate let store: Store<State>
     fileprivate var lastNavigationStateCopy: NavigationTreeNode?
     fileprivate let routingQueue: DispatchQueue
     
-    public init(store: Store<State>, rootRoutable: Routable?) {
+    public init(store: Store<State>, rootRoutable: Routable? = nil, rootIdentifier: String? = nil) {
         self.store = store
         routingQueue = DispatchQueue(label: "RoutingQueue", attributes: [])
         _ =  store.addListener { [weak self] in

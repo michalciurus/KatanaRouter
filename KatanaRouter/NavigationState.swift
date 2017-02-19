@@ -11,13 +11,20 @@ import Katana
 public struct Destination: Equatable, Hashable {
     public let routableType: Routable.Type
     public let contextData: Any?
+    /// User identifier is optional, but has bigger priority than the instance identifier
+    public let userIdentifier: String?
     public let instanceIdentifier: UUID = UUID()
     public var hashValue: Int {
         return instanceIdentifier.hashValue
     }
     
     public static func ==(lhs: Destination, rhs: Destination) -> Bool {
-        return lhs.instanceIdentifier == rhs.instanceIdentifier
+        if let lhsUserIdentifier = lhs.userIdentifier,
+           let rhsUserIdentifier = rhs.userIdentifier {
+            return lhs.userIdentifier == rhs.userIdentifier
+        } else {
+            return lhs.instanceIdentifier == rhs.instanceIdentifier
+        }
     }
 }
 
@@ -27,7 +34,7 @@ public protocol RoutableState: State {
 
 public struct NavigationState {
     public var navigationTreeRootNode: NavigationTreeNode?
-
+    
     public init(navigationRootNode: NavigationTreeNode? = nil) {
         self.navigationTreeRootNode = navigationRootNode
     }
@@ -36,8 +43,7 @@ public struct NavigationState {
 //MARK: NavigationState Mutation Helper Functions
 
 public extension NavigationState {
-    public mutating func addNewDestinationToActiveRoute(_ destination: Routable.Type, contextData: Any?) {
-        let destination = Destination(routableType: destination, contextData: contextData)
+    public mutating func addNewDestinationToActiveRoute(destination: Destination) {
         let destinationNode = NavigationTreeNode(value: destination)
         destinationNode.isActiveRoute = true
         

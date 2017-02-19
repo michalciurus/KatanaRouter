@@ -83,8 +83,13 @@ final public class NavigationTreeNode: Equatable {
     }
     
     public func find(value: Destination) -> NavigationTreeNode? {
-        
-        if value == self.value {
+        return find() {
+            $0.value == value
+        }
+    }
+    
+    public func find(findCondition: (NavigationTreeNode) -> Bool) -> NavigationTreeNode?{
+        if findCondition(self) {
             return self
         }
         
@@ -96,6 +101,12 @@ final public class NavigationTreeNode: Equatable {
         }
         
         return nil
+    }
+    
+    public func find(userIdentifier: String) -> NavigationTreeNode? {
+        return find() {
+            $0.value.userIdentifier == userIdentifier
+        }
     }
     
     public func containsValue(value: Destination) -> Bool {
