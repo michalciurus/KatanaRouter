@@ -1,6 +1,5 @@
 # KatanaRouter: App Navigation routing for Katana
-==========================
-
+----------------
 **This library is still under development**
 
 KatanaRouter is a declarative, type-safe app navigation router for [Katana](https://github.com/BendingSpoons/katana-swift). Katana's *state* structure should represent the whole app's state, including the navigation. The only way to change the navigation state should be through *Actions*. 
@@ -88,7 +87,7 @@ KatanaRouter provides you with actions to change the current state. If you want 
 
 ### Reacting to state change
 
-KatanaRouter has an algorithm that finds differences between states and informs you about them. This is where all the concrete UI actions happen: `presentViewController`, `pushViewController`, `addSubview`.
+KatanaRouter has an algorithm that finds differences between states and informs you about them. This is where all the concrete UI actions happen e.g. `presentViewController`, `pushViewController`, `addSubview`.
 
 All you have to do is conform to the `Routable` protocol in objects that control your app's navigation actions.
 
@@ -132,24 +131,19 @@ extension RandomViewController: Routable {
 ```swift
         public func change(destinationsToPop: [Destination], destinationsToPush: [Destination], completionHandler: @escaping RoutableCompletion) -> [Destination : Routable] {
         var createdRoutables: [Destination : Routable] = [:]
-        var childrenToAdd: [UIViewController] = []
         for destinationToPush in destinationsToPush {
             switch destinationToPush.routableType {
             case is FirstChildView.Type:
                 // Show/add first child
                 // You need to return the `Routable` that's responsible for routing the `FirstChildView` instance
                 createdRoutables[destinationToPush] = firstChildInstance
-                childrenToAdd.append(firstChildInstance)
             case is SecondChildView.Type:
                 // Show/add second child
                 // You need to return the `Routable` that's responsible for routing the `SecondChildView` instance
                 createdRoutables[destinationToPush] = secondChildInstance
-                childrenToAdd.append(secondChildInstance)
             default: fatalError("Not supported")
             }
         }
-        
-        self.viewControllers = childrenToAdd
         // Remember to always call the CompletionHandler when finished with the transition!
         completionHandler()
         return createdRoutables
