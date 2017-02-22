@@ -13,22 +13,38 @@ import Foundation
 final public class NavigationTreeNode: Equatable {
     
     public let value: Destination
-    public var children: [NavigationTreeNode]
     /// Active route is the currently visible navigation path of nodes
     public var isActiveRoute: Bool
     public var parentNode: NavigationTreeNode?
-    public var currentRoutable: Routable?
     
-    public init(value: Destination, children: [NavigationTreeNode] = [], isActiveRoute: Bool = false, parentNode: NavigationTreeNode? = nil, routable: Routable? = nil) {
+    public private(set) var children: [NavigationTreeNode]
+    
+    public init(value: Destination, children: [NavigationTreeNode] = [], isActiveRoute: Bool, parentNode: NavigationTreeNode? = nil) {
         self.value = value
         self.children = []
-        self.isActiveRoute = false
+        self.isActiveRoute = isActiveRoute
         self.parentNode = parentNode
     }
     
     public func addChild(_ node: NavigationTreeNode) {
         children.append(node)
         node.parentNode = self
+    }
+    
+    public func addChildren( _ children: [NavigationTreeNode]) {
+        for child in children {
+            self.addChild(child)
+        }
+    }
+    
+    public func removeChild(_ child: NavigationTreeNode) {
+        guard let index = children.index(of: child) else { return }
+        children.remove(at: index)
+    }
+    
+    public func removeNode() {
+        guard let parentNode = parentNode else { return }
+        parentNode.removeChild(self)
     }
     
     public func getActiveLeaf() -> NavigationTreeNode? {
@@ -94,7 +110,7 @@ final public class NavigationTreeNode: Equatable {
         }
         
         for child in children {
-            let searchResult = child.find(value: value)
+            let searchResult = child.find(findCondition: findCondition)
             if searchResult != nil {
                 return searchResult
             }
@@ -120,7 +136,7 @@ final public class NavigationTreeNode: Equatable {
     public func deepCopy() -> NavigationTreeNode {
         var childrenCopies: [NavigationTreeNode] = []
         
-        let navigationNodeCopy = NavigationTreeNode(value: value, children: [ ], isActiveRoute: isActiveRoute, routable: currentRoutable)
+        let navigationNodeCopy = NavigationTreeNode(value: value, children: [ ], isActiveRoute: isActiveRoute)
         
         for child in children {
             let childCopy = child.deepCopy()

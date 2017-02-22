@@ -12,6 +12,7 @@ enum NavigationTreeDiffAction {
     case push(nodeToPush: NavigationTreeNode)
     case pop(nodeToPop: NavigationTreeNode)
     case changed(poppedNodes: [NavigationTreeNode], pushedNodes: [NavigationTreeNode])
+    case changedActiveChild(currentActiveChild: NavigationTreeNode)
 }
 
 class NavigationTreeDiff {
@@ -44,7 +45,7 @@ class NavigationTreeDiff {
             }
         }
         
-        // We need unique parents to go through them and find group all the pushes and pops 
+        // We need unique parents to go through them and find group all the pushes and pops
         // that happen on the same parent
         let uniquePushParents: [NavigationTreeNode?] = getUniqueParents(nodesToPush)
         var filteredSinglePopNodes = nodesToPop
@@ -69,14 +70,18 @@ class NavigationTreeDiff {
                 continue
             }
             
+            // We're taking the children from the parent, to keep the original *order* of children
+            let nodesToPush = uniquePushParent?.children ?? []
             // Otherwise, we're creating a `change` action with all the pushes and pops for the same parent
-            insertActions.append(.changed(poppedNodes: popsWithSameParent, pushedNodes: pushesWithSameParent))
+            insertActions.append(.changed(poppedNodes: popsWithSameParent, pushedNodes: nodesToPush))
             // We're removing the pops with the parent, because the difference has already been served in a `change` event
             filteredSinglePopNodes = filteredSinglePopNodes.filter(differentParentFilter)
         }
         
         
-        return getPopActions(from: filteredSinglePopNodes) + insertActions
+        return getPopActions(from: filteredSinglePopNodes) +
+            insertActions +
+            getChangedActiveChildActions(lastState: lastState, currentState: currentState)
     }
     
     /// - Parameter nodesToPop: an array of nodes to pop
@@ -99,6 +104,28 @@ class NavigationTreeDiff {
         }
         
         return popActions
+    }
+    
+    /// `changedActiveChild` happens when a new child became active
+    ///
+    /// - Parameters:
+    ///   - lastState: lastState tree
+    ///   - currentState: currentState tree
+    /// - Returns: `changedActiveChild` actions.
+    static func getChangedActiveChildActions(lastState: NavigationTreeNode?, currentState: NavigationTreeNode?) -> [NavigationTreeDiffAction] {
+        var changedActiveChildActions: [NavigationTreeDiffAction] = []
+        currentState?.traverse(postOrder: true) { node in
+            guard let currentActiveChild = node.getActiveChild() else {
+                return
+            }
+            let lastStateNode = lastState?.find(value: node.value)
+            let lastActiveChild = lastStateNode?.getActiveChild()
+            
+            if lastActiveChild != currentActiveChild {
+                changedActiveChildActions.append(.changedActiveChild(currentActiveChild: currentActiveChild))
+            }
+        }
+        return changedActiveChildActions
     }
     
     static func getUniqueParents(_ nodes: [NavigationTreeNode]) -> [NavigationTreeNode?] {

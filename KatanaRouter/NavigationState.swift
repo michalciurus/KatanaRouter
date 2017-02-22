@@ -8,35 +8,28 @@
 
 import Katana
 
-public struct Destination: Equatable, Hashable {
-    public let routableType: Routable.Type
-    public let contextData: Any?
-    /// User identifier is optional, but has bigger priority than the instance identifier
-    public let userIdentifier: String?
-    public let instanceIdentifier: UUID = UUID()
-    public var hashValue: Int {
-        return instanceIdentifier.hashValue
-    }
-    
-    public static func ==(lhs: Destination, rhs: Destination) -> Bool {
-        if let lhsUserIdentifier = lhs.userIdentifier,
-           let rhsUserIdentifier = rhs.userIdentifier {
-            return lhs.userIdentifier == rhs.userIdentifier
-        } else {
-            return lhs.instanceIdentifier == rhs.instanceIdentifier
-        }
-    }
-}
-
 public protocol RoutableState: State {
     var navigationState: NavigationState { get set }
 }
 
 public struct NavigationState {
-    public var navigationTreeRootNode: NavigationTreeNode?
+    private var navigationTreeRootNode: NavigationTreeNode?
     
     public init(navigationRootNode: NavigationTreeNode? = nil) {
         self.navigationTreeRootNode = navigationRootNode
+    }
+
+    mutating func setNavigationTreeRootNode(_ navigationTreeRootNode: NavigationTreeNode?) {
+        self.navigationTreeRootNode = navigationTreeRootNode
+    }
+    
+    /// Whenever mutating `navigationTreeRootNode` which is an object, a copy is created so it doesn't affect
+    /// other `NavigationState` values
+    ///
+    /// - Returns: a copy of `navigationTreeRootNode`, which becomes the new `navigationTreeRootNode`
+    mutating func mutateNavigationTreeRootNode() -> NavigationTreeNode? {
+        navigationTreeRootNode = navigationTreeRootNode?.deepCopy()
+        return navigationTreeRootNode
     }
 }
 
@@ -44,14 +37,31 @@ public struct NavigationState {
 
 public extension NavigationState {
     public mutating func addNewDestinationToActiveRoute(destination: Destination) {
-        let destinationNode = NavigationTreeNode(value: destination)
-        destinationNode.isActiveRoute = true
+        let destinationNode = NavigationTreeNode(value: destination, isActiveRoute: true)
         
-        guard let rootNode = navigationTreeRootNode else {
-            navigationTreeRootNode = destinationNode
+        guard let rootNode = mutateNavigationTreeRootNode() else {
+            setNavigationTreeRootNode(destinationNode)
             return
         }
         
         rootNode.addActiveLeaf(node: destinationNode)
     }
+    
+    public mutating func removeDestinationAtActiveRoute() {
+        guard let rootNode = mutateNavigationTreeRootNode() else { return }
+        guard let activeLeaf = rootNode.getActiveLeaf() else { return }
+        activeLeaf.removeNode()
+    }
+    
+    public mutating func removeDestination(instanceIdentifier: UUID) {
+        guard let rootNode = mutateNavigationTreeRootNode() else { return }
+        let nodeToRemove = rootNode.find() {
+            $0.value.instanceIdentifier == instanceIdentifier
+        }
+        
+        print(instanceIdentifier)
+        
+        nodeToRemove?.removeNode()        
+    }
+    
 }

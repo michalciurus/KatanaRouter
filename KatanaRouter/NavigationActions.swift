@@ -8,55 +8,51 @@
 
 import Katana
 
-public struct AddNavigationDestination {
-    
-    fileprivate let routableType: Routable.Type
-    fileprivate let contextData: Any?
-    fileprivate let identifier: String?
-    
-    /// Creates a new destination
-    ///
-    /// - Parameters:
-    ///   - routableType: type of the destination's Routable
-    ///   - contextData: any data that you wish to pass as context
-    ///   - identifier: your own identifier that you may use later. **Make sure that all identifiers are unique!!**
-    public init(routableType: Routable.Type, contextData: Any? = nil, identifier: String? = nil) {
-        self.routableType = routableType
-        self.contextData = contextData
-        self.identifier = identifier
-    }
-}
-
 /// Add a new destination on top of the current route
-extension AddNavigationDestination: Action {
+public struct AddNewDestination: Action {
+    
+    private let destination: Destination
+    
+    public init(destination: Destination) {
+        self.destination = destination
+    }
+    
     public func updatedState(currentState: State) -> State {
         guard var state = currentState as? RoutableState else { return currentState }
-        let destination = Destination(routableType: routableType, contextData: contextData, userIdentifier: identifier)
         state.navigationState.addNewDestinationToActiveRoute(destination: destination)
         return state
     }
 }
 
-
-/// Set the current navigation root. 
-/// Discards all the current routes and replaces it with the root routable!
-public struct SetRootRoutable: Action {
+/// Removes the destination with given instance identifier from the navigation tree
+/// Doesn't do anything if the node is not in the tree
+/// Very useful for updating the tree with automatic navigation e.g. back button in UINavigationController
+public struct RemoveDestination: Action {
     
-    private let routable: Routable
-    private let userIdentifier: String?
+    private let instanceIdentifier: UUID
     
-    public init(routable: Routable, userIdentifier: String? = nil) {
-        self.routable = routable
-        self.userIdentifier = userIdentifier
+    
+    public init(instanceIdentifier: UUID) {
+        self.instanceIdentifier = instanceIdentifier
     }
     
     public func updatedState(currentState: State) -> State {
         guard var state = currentState as? RoutableState else { return currentState }
-        let rootDestination = Destination(routableType: type(of: routable), contextData: nil, userIdentifier: userIdentifier)
-        let rootNode = NavigationTreeNode(value: rootDestination)
-        rootNode.currentRoutable = routable
-        state.navigationState.navigationTreeRootNode = rootNode
+        state.navigationState.removeDestination(instanceIdentifier: instanceIdentifier)
         return state
+    }
+}
+
+/// Removes currently active destination
+public struct RemoveCurrentDestination: Action {
+    public func updatedState(currentState: State) -> State {
+        guard var state = currentState as? RoutableState else { return currentState }
+        state.navigationState.removeDestinationAtActiveRoute()
+        return state
+    }
+    
+    public init() {
+        
     }
 }
 
@@ -64,21 +60,41 @@ public struct SetRootRoutable: Action {
 public struct AddChildrenToDestination: Action {
     
     private let destinationIdentifier: String
-    private let destinations: [AddNavigationDestination]
+    // All destinations to add
+    private let destinations: [Destination]
+    // Destination to set active as
+    private let activeDestination: Destination?
+    
+    public init(identifier: String, destinations: [Destination], activeDestination: Destination?) {
+        self.destinationIdentifier = identifier
+        self.destinations = destinations
+        self.activeDestination = activeDestination
+    }
+    
+    
+    /// Adds one active child to a destination
+    ///
+    /// - Parameters:
+    ///   - identifier: destination to add to
+    ///   - child: to add to the destination
+    public init(identifier: String, child: Destination) {
+        self.destinationIdentifier = identifier
+        self.destinations = [child]
+        self.activeDestination = child
+    }
     
     public func updatedState(currentState: State) -> State {
         guard var state = currentState as? RoutableState else { return currentState }
-        guard let node = state.navigationState.navigationTreeRootNode?.find(userIdentifier: destinationIdentifier) else {
+        guard let node = state.navigationState.mutateNavigationTreeRootNode()?.find(userIdentifier: destinationIdentifier) else {
             return currentState
         }
         
-        let nodes = destinations.map { addDestination -> NavigationTreeNode in
-            let destination = Destination(routableType: addDestination.routableType, contextData: addDestination.contextData, userIdentifier: addDestination.identifier)
-            return NavigationTreeNode(value: destination)
+        var childrenNodes = destinations.map { addDestination -> NavigationTreeNode in
+            return NavigationTreeNode(value: addDestination, isActiveRoute: addDestination == activeDestination)
         }
-        node.children.append(contentsOf: nodes)
+
+        node.addChildren(childrenNodes)
         
         return state
     }
-    
 }
