@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = "KatanaRouter"
-  s.version          = "0.3"
+  s.version          = "0.4"
   s.summary          = "App Routing for Katana"
   s.description      = <<-DESC
 						  Declarative and type-safe routing for Katana.
