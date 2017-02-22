@@ -2,7 +2,7 @@
 
 **This library is still under development**
 
-KatanaRouter is a declarative, type-safe app navigation router for [Katana](https://github.com/BendingSpoons/katana-swift). Katana's *state* structure should represent the whole app's state, including the navigation. The only way to change the navigation state should be through *Actions*. 
+KatanaRouter is a declarative, type-safe app navigation router for [Katana](https://github.com/BendingSpoons/katana-swift). Katana's *state* structure should represent the whole app's state, including the navigation. The only way to change the navigation state should be through *actions*. 
 
 KatanaRouter takes care of everything for you: storing the state, providing you actions to change the state, and finding differences between the navigation states.
 
