@@ -166,7 +166,9 @@ extension RandomViewController: Routable {
 }
 ```
 
+## Demo App
 
+You can find a simple (work in progress) demo app at [KatanaRouterDemo](https://github.com/michalciurus/KatanaRouterDemo).
 
 
 
