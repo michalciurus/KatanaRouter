@@ -89,7 +89,7 @@ public struct AddChildrenToDestination: Action {
             return currentState
         }
         
-        var childrenNodes = destinations.map { addDestination -> NavigationTreeNode in
+        let childrenNodes = destinations.map { addDestination -> NavigationTreeNode in
             return NavigationTreeNode(value: addDestination, isActiveRoute: addDestination == activeDestination)
         }
 
