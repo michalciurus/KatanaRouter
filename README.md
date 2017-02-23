@@ -23,9 +23,9 @@ KatanaRouter takes care of everything for you: storing the state, providing you 
 ###CocoaPods
 
 You can install KatanaRouter via CocoaPods by adding this line to your `podfile`:
-
-	pod 'KatanaRouter'
-	
+```ruby
+pod 'KatanaRouter'
+```
 And run `pod install`.
 
 ## Overview
@@ -80,11 +80,11 @@ struct MyState: State, RoutableState {
 KatanaRouter provides you with actions to change the current state. If you want to request a new state change action, that's missing, please create an issue on GitHub.
 
 ```swift
-    func didTapPush() {
-         //RandomViewController conforms to `Routable` type
-        let pushAction = AddNewDestination(destination: Destination(routableType: RandomViewController.self))
-        store.dispatch(pushAction)
-    }
+func didTapPush() {
+    // RandomViewController conforms to `Routable` type
+    let pushAction = AddNewDestination(destination: Destination(routableType: RandomViewController.self))
+    store.dispatch(pushAction)
+}
 ```
 
 ### Reacting to state change
@@ -102,69 +102,68 @@ extension RandomViewController: Routable {
 • Push - Singular push action happened. You're responsible to push/present/show the destination and return it's `Routable`
 
 ```swift
-    func push(destination: Destination, completionHandler: @escaping RoutableCompletion) -> Routable {
-        switch(destination.routableType) {
-        case is RandomViewController.Type:
-            // Instantiate and push/present/show an instance of `RandomViewController`
-            // Remember to always call the `completionHandler`
-            completionHandler()
-            // Return a `Routable` responsible for the pushed destination
-            return randomViewController
-        default: fatalError("Not supported")
-        }
+func push(destination: Destination, completionHandler: @escaping RoutableCompletion) -> Routable {
+    switch(destination.routableType) {
+    case is RandomViewController.Type:
+        // Instantiate and push/present/show an instance of `RandomViewController`
+        // Remember to always call the `completionHandler`
+        completionHandler()
+        // Return a `Routable` responsible for the pushed destination
+        return randomViewController
+    default: fatalError("Not supported")
     }
+}
 ```
 
 • Pop - Singular pop happened. You're responsible to pop/dismiss/remove the destination
     
 ```swift
-    func pop(destination: Destination, completionHandler: @escaping RoutableCompletion) {
-        switch(destination.routableType) {
-        case is RandomViewController.Type:
-            // pop/dismiss/remove `randomViewController`
+func pop(destination: Destination, completionHandler: @escaping RoutableCompletion) {
+    switch(destination.routableType) {
+    case is RandomViewController.Type:
+        // pop/dismiss/remove `randomViewController`
         completionHandler()
-        default: fatalError("Not supported")
-        }
+    default: fatalError("Not supported")
     }
+}
 ```
 
 • Change - A more complex action. At least two singular pop/push actions. It gives you a chance to replace the destinations in one smooth transition. You're responsible for popping and pushing, you also need to return `Routable`'s for all the freshly pushed destinations.
 
 ```swift
-        public func change(destinationsToPop: [Destination], destinationsToPush: [Destination], completionHandler: @escaping RoutableCompletion) -> [Destination : Routable] {
-        var createdRoutables: [Destination : Routable] = [:]
-        for destinationToPush in destinationsToPush {
-            switch destinationToPush.routableType {
-            case is FirstChildView.Type:
-                // Show/add first child
-                // You need to return the `Routable` that's responsible for routing the `FirstChildView` instance
-                createdRoutables[destinationToPush] = firstChildInstance
-            case is SecondChildView.Type:
-                // Show/add second child
-                // You need to return the `Routable` that's responsible for routing the `SecondChildView` instance
-                createdRoutables[destinationToPush] = secondChildInstance
-            default: fatalError("Not supported")
-            }
+public func change(destinationsToPop: [Destination], destinationsToPush: [Destination], completionHandler: @escaping RoutableCompletion) -> [Destination : Routable] {
+    var createdRoutables: [Destination : Routable] = [:]
+    for destinationToPush in destinationsToPush {
+        switch destinationToPush.routableType {
+        case is FirstChildView.Type:
+            // Show/add first child
+            // You need to return the `Routable` that's responsible for routing the `FirstChildView` instance
+            createdRoutables[destinationToPush] = firstChildInstance
+        case is SecondChildView.Type:
+            // Show/add second child
+            // You need to return the `Routable` that's responsible for routing the `SecondChildView` instance
+            createdRoutables[destinationToPush] = secondChildInstance
+        default: fatalError("Not supported")
         }
-        // Remember to always call the CompletionHandler when finished with the transition!
-        completionHandler()
-        return createdRoutables
     }
+    // Remember to always call the CompletionHandler when finished with the transition!
+    completionHandler()
+    return createdRoutables
+}
 ```
 
 • ChangeActiveDestination - Called when there's a new destination set to active. You're responsible of setting the active destination to visible.
 
 ```swift
-        public func changeActiveDestination(currentActiveDestination: Destination, completionHandler: @escaping RoutableCompletion) {
-        switch currentActiveDestination.routableType {
-            case is FirstChildView.Type:
-                self.selectedIndex = 0
-            case is SecondChildView.Type:
-                self.selectedIndex = 1
-        default: fatalError("Not supported")
-        }
-        completionHandler()
+public func changeActiveDestination(currentActiveDestination: Destination, completionHandler: @escaping RoutableCompletion) {
+    switch currentActiveDestination.routableType {
+    case is FirstChildView.Type:
+        self.selectedIndex = 0
+    case is SecondChildView.Type:
+        self.selectedIndex = 1
+    default: fatalError("Not supported")
     }
+    completionHandler()
 }
 ```
 
