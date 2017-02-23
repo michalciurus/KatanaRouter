@@ -167,6 +167,10 @@ public func changeActiveDestination(currentActiveDestination: Destination, compl
 }
 ```
 
+## Contribution
+
+Feel free to contribute in any way 👍
+
 ## Demo App
 
 You can find a simple (work in progress) demo app at [KatanaRouterDemo](https://github.com/michalciurus/KatanaRouterDemo).
