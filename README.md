@@ -6,6 +6,8 @@ KatanaRouter is a declarative, type-safe app navigation router for [Katana](http
 
 KatanaRouter takes care of everything for you: storing the state, providing you actions to change the state, and finding differences between the navigation states.
 
+[Here's a small article](http://swiftpearls.com/app-routing-algorithm.html) I wrote, explaining how I implemented the algorithm that runs it.
+
 *Inspired by [ReSwift-Router](https://github.com/ReSwift/ReSwift-Router)*.
 
 ## Installation
