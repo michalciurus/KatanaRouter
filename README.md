@@ -1,8 +1,15 @@
-# KatanaRouter: App Navigation routing for Katana
+# KatanaRouter: App Navigation routing for Katana 🌲
 
 **This library is still under development**
 
-KatanaRouter is a declarative, type-safe app navigation router for [Katana](https://github.com/BendingSpoons/katana-swift). Katana's *state* structure should represent the whole app's state, including the navigation. The only way to change the navigation state should be through *actions*. 
+KatanaRouter is a declarative, type-safe app navigation router for [Katana](https://github.com/BendingSpoons/katana-swift). Katana's *state* structure should represent the whole app's state, including the navigation. The only way to change the navigation state should be through *actions*.
+
+That's exactly what this library lets you to do:
+
+```swift
+let pushAction = AddNewDestination(destination: Destination(routableType: RandomViewController.self))
+store.dispatch(pushAction)
+```
 
 KatanaRouter takes care of everything for you: storing the state, providing you actions to change the state, and finding differences between the navigation states.
 
@@ -39,6 +46,7 @@ For example:
 • A `UITabBarController` with `UINavigationController` as tabs, every one of which can push `UIViewControllers` on top of each other. It's modelled into a tree in which the tab bar controller is the root
 
 ```
+
             UITabBarController(active)
                +     +   +
    +-----------+     |   +------------+
@@ -53,6 +61,7 @@ Tab One(active)    Tab Two         Tab Three
    |                  +                |
    +                                   +
 ChildVc(active)     ChildVc          ChildVc
+
 ```
 
 • You can as easily model a `UIViewController` destination which has children `UIView` destinations in a `UIScrollView` and declaratively change the `UIView` children with an action. It means that you can use KatanaRouter to route your child `UIView`s.
