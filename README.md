@@ -27,7 +27,7 @@ KatanaRouter takes care of everything for you: storing the state, providing you 
 
 - Swift 3.0+
 
-###CocoaPods
+### CocoaPods
 
 You can install KatanaRouter via CocoaPods by adding this line to your `podfile`:
 ```ruby
